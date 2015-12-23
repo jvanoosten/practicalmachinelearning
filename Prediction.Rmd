@@ -1,0 +1,118 @@
+---
+title: "Predicting Manner of Exercise"
+author: "Jim VanOosten"
+date: "December 22, 2015"
+output: html_document
+---
+
+## Summary
+
+The goal of this project is to use exogenous data to predict the manner in which an exercise was performed.  Training and testing data sets were provided for the project.  After loading the training data, it is tidied by removing the columns that are not used in the model training.  The training data was split for cross validation into a training set (75%) and a probe set (25%).  The model was trained using the RandomForest algorithm and its accuracy was found to be 99% using the probe data.  As a final verification, the model was used to correctly predict 20 records provided in the test set. 
+
+## Data Processing
+
+This section includes downloading, tidying, and splitting the data for cross validation.   The data for this project came from a research project focused on Human Activity Recognition (HAR).  See this source http://groupware.les.inf.puc-rio.br/har for more detail.  
+
+### Loading the data
+
+The training data is downloaded using the provided URL.
+
+```{r loadtraindata, echo = TRUE}
+  setwd("~/Documents/coursera/datascience/predmachlearn/project/practicalmachinelearning")
+  set.seed(327)
+
+  # Verify the pml-training.csv has been downloaded 
+  if (!file.exists("pml-training.csv")) {
+    dataUrl = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+    download.file(dataUrl, destfile = "pml-training.csv", method = "curl")
+  }
+
+  # load the data in the pmltrain dataframe
+  pmltrain <- read.csv("pml-training.csv", header = TRUE)
+  dim(pmltrain)
+```
+
+### Tidying the data
+
+The training data is tidied by removing columns not used to train the model.  The discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had all NA values could not be used as predictors.  So those columns are pruned from the training data.   In addition I removed user_name, time stamps, and window columns as predictors so the model would be based on the sensor data. 
+
+```{r tidytraindata, echo = TRUE}
+  library(dplyr)
+  # Verify the pml-testing.csv has been downloaded 
+  if (!file.exists("pml-testing.csv")) {
+    dataUrl = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+    download.file(dataUrl, destfile = "pml-testing.csv", method = "curl")
+  }
+
+  # load the data in the test dataframe
+  pmltest <- read.csv("pml-testing.csv", header = TRUE)
+  dim(pmltest)
+  
+  # get a list of the test columns with NA in the column
+  na_names <- names(pmltest[, colSums(is.na(pmltest)) == nrow(pmltest)])
+  
+  # remove columns from the training set that are NA in the test set 
+  pmltrain <- pmltrain[,-which(names(pmltrain) %in% na_names)]
+  
+  # only keep the sensor based columns and the classe 
+  pmltrain <- select(pmltrain, roll_belt:classe)
+```
+
+### Cross Validation 
+
+The training set is split into two data sets. One for training and one for probing the model before the final test. 
+
+```{r splitdata, echo = TRUE}
+  library(caret)
+  inTrain <- createDataPartition(y=pmltrain$classe, p=0.75, list=FALSE)
+  training <- pmltrain[inTrain,] 
+  dim(training)
+  probing <- pmltrain[-inTrain,] 
+  dim(probing)
+```
+
+## Model Creation and Verification 
+
+### Model Creation 
+
+The RandomeForest algorithm is used to create the model.  All of sensor based columns are used as predictors.   The doMC package is used to exploid the multiple cores on my work station during the model creation 
+
+```{r trainmodel, echo = TRUE, cache=TRUE}
+  
+  library(doMC)
+  registerDoMC(cores = 6)
+  modFit <- train(classe ~ ., data=training, method="rf")
+```
+
+### Model Verification
+
+The probe data set aside for cross validation is used to gauge the model accuracy.  
+
+```{r verifymodel, echo=FALSE}
+  predictions <- predict(modFit, probing)
+  confusionMatrix(predictions,probing$classe)
+```
+
+## Testing 
+
+The machine learning algorithm created above is applied to the 20 test cases provided in the test data.   The results are 100% correct. 
+
+```{r, finalpredictions, echo=FALSE}
+  predictfinal <- predict(modFit, pmltest)
+  predictfinal
+
+  results <- "./results"
+  if(!file.exists(results)) {dir.create(results)}
+
+  pml_write_files = function(x,y){
+    n = length(x)
+    for(i in 1:n){
+      filename = paste(y,"/problem_id_",i,".txt",sep="")
+      write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+  }
+
+  pml_write_files(predictfinal,results)  
+```
+
+

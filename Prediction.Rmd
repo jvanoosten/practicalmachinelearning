@@ -42,7 +42,7 @@ The training data is downloaded using the provided URL and put into a dataframe 
 
 ### Predictor Reduction
 
-The training data is tidied by removing columns not used to train the model.  The discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had NA values could not be used as predictors as they would cause errors if included in the model.  So those columns are pruned from the training data.  
+The training data is tidied by removing columns not used to train the model.  Normally the testing data would not be used to influence the prediction model, however, the discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had NA values could not be used as predictors as they would cause errors if included in the model.  Thus the test columns with all NAs are pruned from the training data.  
 
 ```{r tidytraindata, echo = TRUE}
   library(dplyr)
@@ -73,7 +73,7 @@ In addition, I removed user_name, time stamps, and window columns as predictors 
 
 ### Data Exploration
 
-Exploring the sensor data provides clues on how it can be used to classify the exercises.  Here I plot the roll_belt vs pitch_belt while using the classe to color the data.    
+Exploring the sensor data provides clues on how it can be used to classify the exercises.  The plot below shows the roll_belt vs pitch_belt variables while using the classe to color the data.    
 
 ```{r exploredata, echo = TRUE}
   library(ggplot2)
@@ -118,7 +118,7 @@ A plot of the model shows most of the accuracy is achieved with a few predictors
 
 ### Model Verification
 
-The probe data set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versus the reference Classes A-E.  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
+The probe data set that was set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versus the reference Classes A-E.  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
 
 ```{r verifymodel, echo=FALSE}
   predictions <- predict(modFit, probing)
@@ -127,7 +127,7 @@ The probe data set aside for cross validation is used to gauge the model accurac
 
 ## Testing 
 
-The machine learning algorithm created above is applied to the 20 test cases provided in the test data.   The results are 100% correct.  The results are saved to files for project submission.
+The machine learning algorithm created above is applied to the 20 test cases provided in the test data. The results are saved to files for project submission.  They are 100% correct.  
 
 ```{r, finalpredictions, echo=FALSE}
   predictfinal <- predict(modFit, pmltest)

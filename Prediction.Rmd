@@ -75,18 +75,24 @@ The training set is split into two data sets. One for training and one for probi
 
 ### Model Creation 
 
-The RandomeForest algorithm is used to create the model.  All of sensor based columns are used as predictors.   The doMC package is used to exploid the multiple cores on my work station during the model creation 
+The RandomeForest algorithm is used to create the model.  All of sensor based columns are used as predictors.   The doMC package is used to exploit the multiple cores on my work station during the model creation.  It forks processes to split computations and run in a fraction of the time versus a single core execution.
 
 ```{r trainmodel, echo = TRUE, cache=TRUE}
-  
   library(doMC)
   registerDoMC(cores = 6)
   modFit <- train(classe ~ ., data=training, method="rf")
 ```
 
+A plot of the model shows most of the accuracy is achieved with a few predictors and a slit improvement is achieved with less then 30 predictors.
+
+```{r plotmodel, echo = TRUE}
+  plot(modFit)
+```
+
+
 ### Model Verification
 
-The probe data set aside for cross validation is used to gauge the model accuracy.  
+The probe data set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versis the reference Classes (A-E).  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
 
 ```{r verifymodel, echo=FALSE}
   predictions <- predict(modFit, probing)
@@ -95,7 +101,7 @@ The probe data set aside for cross validation is used to gauge the model accurac
 
 ## Testing 
 
-The machine learning algorithm created above is applied to the 20 test cases provided in the test data.   The results are 100% correct. 
+The machine learning algorithm created above is applied to the 20 test cases provided in the test data.   The results are 100% correct.  The results are saved to files for project submission.
 
 ```{r, finalpredictions, echo=FALSE}
   predictfinal <- predict(modFit, pmltest)

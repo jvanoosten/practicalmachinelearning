@@ -1,4 +1,2 @@
-# practicalmachinelearning
-# Github repo for Coursera JHU Data Science - Practical Machine Learning Project  
+Class project for the Practical Machine Learning course by Johns Hopkins University on Coursera.  
 
-Testing 1, 2, 3 

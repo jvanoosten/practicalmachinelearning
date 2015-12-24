@@ -1,5 +1,5 @@
 ---
-title: "Predicting Manner of Exercise"
+title: "Predicting the Manner of Exercise"
 author: "Jim VanOosten"
 date: "December 22, 2015"
 output: html_document
@@ -7,15 +7,23 @@ output: html_document
 
 ## Summary
 
-The goal of this project is to use exogenous data to predict the manner in which an exercise was performed.  Training and testing data sets were provided for the project.  After loading the training data, it is tidied by removing the columns that are not used in the model training.  The training data was split for cross validation into a training set (75%) and a probe set (25%).  The model was trained using the RandomForest algorithm and its accuracy was found to be 99% using the probe data.  As a final verification, the model was used to correctly predict 20 records provided in the test set. 
+The goal of this project is to use exogenous data to predict the manner in which an exercise was performed.  Training and testing data sets were provided for the project.  After loading the training data, it is tidied by removing the columns that are not used in the model training.  The training data was split for cross validation into a training set (75%) and a probe set (25%).  The model was trained using the Random Forest algorithm and its accuracy was found to be over 99% using the probe data.  As a final verification, the model was used to correctly predict 20 tests provided in the testing data set. 
 
 ## Data Processing
 
-This section includes downloading, tidying, and splitting the data for cross validation.   The data for this project came from a research project focused on Human Activity Recognition (HAR).  See this source http://groupware.les.inf.puc-rio.br/har for more detail.  
+This section includes downloading, tidying, and splitting the data for cross validation.   The data for this project came from a research project focused on Human Activity Recognition (HAR).  The participants in the study were asked to perform bicep curls correctly and incorrectly in 5 different ways.  Each way is considered a class, A-F, and recorded in the classe variable of the data set.
+
+* Class A: exactly according to the specification
+* Class B: throwing the elbows to the front
+* Class C: lifting the dumbbell only halfway
+* Class D: lowering the dumbbell only halfway 
+* Class E: throwing the hips to the front 
+
+The sensor data was recorded by accelerometers on the participant's belt, forearm, arm, and dumbell.  For more detail see  http://groupware.les.inf.puc-rio.br/har.  
 
 ### Loading the data
 
-The training data is downloaded using the provided URL.
+The training data is downloaded using the provided URL and put into a dataframe object.
 
 ```{r loadtraindata, echo = TRUE}
   setwd("~/Documents/coursera/datascience/predmachlearn/project/practicalmachinelearning")
@@ -32,9 +40,9 @@ The training data is downloaded using the provided URL.
   dim(pmltrain)
 ```
 
-### Tidying the data
+### Predictor Reduction
 
-The training data is tidied by removing columns not used to train the model.  The discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had all NA values could not be used as predictors.  So those columns are pruned from the training data.   In addition I removed user_name, time stamps, and window columns as predictors so the model would be based on the sensor data. 
+The training data is tidied by removing columns not used to train the model.  The discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had NA values could not be used as predictors as they would cause errors if included in the model.  So those columns are pruned from the training data.  
 
 ```{r tidytraindata, echo = TRUE}
   library(dplyr)
@@ -53,10 +61,26 @@ The training data is tidied by removing columns not used to train the model.  Th
   
   # remove columns from the training set that are NA in the test set 
   pmltrain <- pmltrain[,-which(names(pmltrain) %in% na_names)]
-  
+```
+
+In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data.  
+
+```{r reducepredicters, echo = TRUE}
+  library(dplyr)
   # only keep the sensor based columns and the classe 
   pmltrain <- select(pmltrain, roll_belt:classe)
 ```
+
+### Data Exploration
+
+Exploring the sensor data provides clues on how it can be used to classify the exercises.  Here I plot the roll_belt vs pitch_belt while using the classe to color the data.    
+
+```{r exploredata, echo = TRUE}
+  library(ggplot2)
+  qplot(roll_belt,pitch_belt,colour=classe,data=pmltrain)
+```
+
+Class E is distinguished from the other classes in the plot which makes sense since the accelerometer on the belt would record the action of throwing the hips to the front.
 
 ### Cross Validation 
 
@@ -75,7 +99,9 @@ The training set is split into two data sets. One for training and one for probi
 
 ### Model Creation 
 
-The RandomeForest algorithm is used to create the model.  All of sensor based columns are used as predictors.   The doMC package is used to exploit the multiple cores on my work station during the model creation.  It forks processes to split computations and run in a fraction of the time versus a single core execution.
+I selected Random Forest algorithm to create the model.  The Random Forest algorithm grows many classification trees, forming a forest, from which the tree with the most votes (based on its classification results) is selected.  All of the sensor based columns that remain in the training data set are used as predictors while the classe variable is the outcome.
+
+The doMC package is used to exploit the multiple cores on my work station during the model creation.  The doMC uses the parallel package to fork processes and split computations.  As a result, the model creation completes in a fraction of the time versus the single core execution.
 
 ```{r trainmodel, echo = TRUE, cache=TRUE}
   library(doMC)
@@ -83,7 +109,7 @@ The RandomeForest algorithm is used to create the model.  All of sensor based co
   modFit <- train(classe ~ ., data=training, method="rf")
 ```
 
-A plot of the model shows most of the accuracy is achieved with a few predictors and a slit improvement is achieved with less then 30 predictors.
+A plot of the model shows most of the accuracy is achieved with a few predictors. As a follow on excercise, I could explore reducing the predictors using pre-processing techniques like Principle Component Analysis (PCA). 
 
 ```{r plotmodel, echo = TRUE}
   plot(modFit)
@@ -92,7 +118,7 @@ A plot of the model shows most of the accuracy is achieved with a few predictors
 
 ### Model Verification
 
-The probe data set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versis the reference Classes (A-E).  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
+The probe data set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versus the reference Classes A-E.  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
 
 ```{r verifymodel, echo=FALSE}
   predictions <- predict(modFit, probing)

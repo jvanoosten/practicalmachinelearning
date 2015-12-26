@@ -43,9 +43,12 @@ The training data is downloaded using the provided URL and put into a dataframe 
 ### Predictor Reduction
 
 The training data is tidied by removing columns not used to train the model.  Normally the testing data would not be used to influence the prediction model, however, the discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had NA values could not be used as predictors as they would cause errors if included in the model.  Thus the test columns with all NAs are pruned from the training data.  
-
-```{r tidytraindata, echo = TRUE}
+```{r libload, echo = FALSE, message = FALSE}
   library(dplyr)
+  library(caret)
+```
+
+```{r tidytrainingdata, echo = TRUE}
   # Verify the pml-testing.csv has been downloaded 
   if (!file.exists("pml-testing.csv")) {
     dataUrl = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
@@ -63,12 +66,12 @@ The training data is tidied by removing columns not used to train the model.  No
   pmltrain <- pmltrain[,-which(names(pmltrain) %in% na_names)]
 ```
 
-In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data.  
+In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data.  The names of the remaining variables are shown.
 
 ```{r reducepredicters, echo = TRUE}
-  library(dplyr)
   # only keep the sensor based columns and the classe 
   pmltrain <- select(pmltrain, roll_belt:classe)
+  names(pmltrain)
 ```
 
 ### Data Exploration
@@ -87,7 +90,6 @@ Class E is distinguished from the other classes in the plot which makes sense si
 The training set is split into two data sets. One for training and one for probing the model before the final test. 
 
 ```{r splitdata, echo = TRUE}
-  library(caret)
   inTrain <- createDataPartition(y=pmltrain$classe, p=0.75, list=FALSE)
   training <- pmltrain[inTrain,] 
   dim(training)
@@ -116,20 +118,20 @@ A plot of the model shows most of the accuracy is achieved with a few predictors
 ```
 
 
-### Model Verification
+### Model Verification and Accuracy
 
-The probe data set that was set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versus the reference Classes A-E.  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis. 
+The probe data set that was set aside for cross validation is used to gauge the model accuracy.  The confusion matrix shows the matrix of the predictions versus the reference Classes A-E.  The diagonal represents correct predictions and the rows show which category a given prediction actually belonged in.  The accuracy of the model was over 99%.  Statistics are provided on a per Class basis including the sensitivity and specificity.
 
-```{r verifymodel, echo=FALSE}
+```{r verifymodel, echo=TRUE}
   predictions <- predict(modFit, probing)
   confusionMatrix(predictions,probing$classe)
 ```
 
-## Testing 
+## Final Test 
 
 The machine learning algorithm created above is applied to the 20 test cases provided in the test data. The results are saved to files for project submission.  They are 100% correct.  
 
-```{r, finalpredictions, echo=FALSE}
+```{r, finalpredictions, echo=TRUE}
   predictfinal <- predict(modFit, pmltest)
   predictfinal
 

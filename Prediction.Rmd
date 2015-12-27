@@ -7,7 +7,7 @@ output: html_document
 
 ## Summary
 
-The goal of this project is to use exogenous data to predict the manner in which an exercise was performed.  Training and testing data sets were provided for the project.  After loading the training data, it is tidied by removing the columns that are not used in the model training.  The training data was split for cross validation into a training set (75%) and a probe set (25%).  The model was trained using the Random Forest algorithm and its accuracy was found to be over 99% using the probe data.  As a final verification, the model was used to correctly predict 20 tests provided in the testing data set. 
+The goal of this project is to use exogenous data to predict the manner in which an exercise was performed.  Training and testing data sets were provided for the project.  After loading the training data, it is tidied by removing the columns that are not used in the model training.  The training data was split for cross validation into a training set (60%) and a probe set (40%).  The model was trained using the Random Forest algorithm and its accuracy was found to be over 99% using the probe data.  As a final verification, the model was used to correctly predict 20 tests provided in the testing data set.
 
 ## Data Processing
 
@@ -127,7 +127,7 @@ The out of sample error is the error rate observed on the probing data which is 
 
 ## Final Test 
 
-The machine learning algorithm created above is applied to the 20 test cases provided in the test data. The results are saved to files for project submission.  They are 100% correct.  
+The machine learning algorithm created above is applied to the 20 test cases provided in the test data. The results are saved to files for project submission. They are 100% correct.  
 
 ```{r, finalpredictions, echo=TRUE}
   predictfinal <- predict(modFit, pmltest)
@@ -146,5 +146,4 @@ The machine learning algorithm created above is applied to the 20 test cases pro
 
   pml_write_files(predictfinal,results)  
 ```
-
 

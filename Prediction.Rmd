@@ -66,7 +66,7 @@ The training data is tidied by removing columns not used to train the model.  No
   pmltrain <- pmltrain[,-which(names(pmltrain) %in% na_names)]
 ```
 
-In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data.  The names of the remaining variables are shown.
+In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data.  Keeping the user_name and window number would have made placement of the test frame trivial because the training data is more like a movie while the test data is like a frame from that movie.  The names of the remaining variables are shown.
 
 ```{r reducepredicters, echo = TRUE}
   # only keep the sensor based columns and the classe 

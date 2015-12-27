@@ -119,7 +119,7 @@ img {
   
   # remove columns from the training set that are NA in the test set 
   pmltrain &lt;- pmltrain[,-which(names(pmltrain) %in% na_names)]</code></pre>
-<p>In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data. The names of the remaining variables are shown.</p>
+<p>In addition, I removed user_name, time stamps, and window columns as predictors so the model would be based solely on the sensor data. Keeping the user_name and window number would have made placement of the test frame trivial because the training data is more like a movie while the test data is like a frame from that movie. The names of the remaining variables are shown.</p>
 <pre class="r"><code>  # only keep the sensor based columns and the classe 
   pmltrain &lt;- select(pmltrain, roll_belt:classe)
   names(pmltrain)</code></pre>

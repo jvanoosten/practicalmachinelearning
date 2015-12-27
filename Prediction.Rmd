@@ -40,7 +40,7 @@ The training data is downloaded using the provided URL and put into a dataframe 
   dim(pmltrain)
 ```
 
-### Predictor Reduction
+### Feature Selection
 
 The training data is tidied by removing columns not used to train the model.  Normally the testing data would not be used to influence the prediction model, however, the discussion forums (https://class.coursera.org/predmachlearn-035/forum/thread?thread_id=2) revealed that the test data columns that had NA values could not be used as predictors as they would cause errors if included in the model.  Thus the test columns with all NAs are pruned from the training data.  
 ```{r libload, echo = FALSE, message = FALSE}
@@ -87,10 +87,10 @@ Class E is distinguished from the other classes in the plot which makes sense si
 
 ### Cross Validation 
 
-The training set is split into two data sets. One for training and one for probing the model before the final test. 
+The training set is split into two data sets using the standard 60/40 split of the data for cross validation.  The 60% split is used for training while the 40% split will be used to probe the model and estimate the out of sample error before the final test.   
 
 ```{r splitdata, echo = TRUE}
-  inTrain <- createDataPartition(y=pmltrain$classe, p=0.75, list=FALSE)
+  inTrain <- createDataPartition(y=pmltrain$classe, p=0.60, list=FALSE)
   training <- pmltrain[inTrain,] 
   dim(training)
   probing <- pmltrain[-inTrain,] 
@@ -111,12 +111,6 @@ The doMC package is used to exploit the multiple cores on my work station during
   modFit <- train(classe ~ ., data=training, method="rf")
 ```
 
-A plot of the model shows most of the accuracy is achieved with a few predictors. As a follow on excercise, I could explore reducing the predictors using pre-processing techniques like Principle Component Analysis (PCA). 
-
-```{r plotmodel, echo = TRUE}
-  plot(modFit)
-```
-
 
 ### Model Verification and Accuracy
 
@@ -126,6 +120,10 @@ The probe data set that was set aside for cross validation is used to gauge the 
   predictions <- predict(modFit, probing)
   confusionMatrix(predictions,probing$classe)
 ```
+
+### Out of Sample Error 
+
+The out of sample error is the error rate observed on the probing data which is 100% - accuracy = 100% - 99.22% = .78%.  
 
 ## Final Test 
 
